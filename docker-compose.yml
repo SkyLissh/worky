@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  web:
+    <<:
+      &web
+      image: "worky:dev"
+      container_name: "worky"
+      restart: unless-stopped
+      build:
+        target: development
+        context: .
+        dockerfile: Dockerfile
+      volumes:
+        - .:/worky
+      env_file:
+        - .env
+    command: sh ./scripts/start-dev.sh
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+
+  tailwind:
+    <<: *web
+    container_name: "worky_tailwind"
+    command: tailwind -i ./app/static/css/input.css -o ./app/static/css/dist/styles.css --watch
+    tty: true
+
+  db:
+    image: "postgres:14-alpine"
+    container_name: "worky_db"
+    restart: unless-stopped
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    env_file:
+      - .env
+
+volumes:
+  pgdata:
